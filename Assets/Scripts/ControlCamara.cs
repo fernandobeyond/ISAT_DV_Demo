@@ -16,8 +16,8 @@ public class ControlCamara : MonoBehaviour
     {
         Vector2 mouseDelta = Mouse.current.delta.ReadValue();
 
-        float mouseX = mouseDelta.x * sensibilidad * Time.deltaTime;
-        float mouseY = mouseDelta.y * sensibilidad * Time.deltaTime;
+        float mouseX = mouseDelta.x * sensibilidad;
+        float mouseY = mouseDelta.y * sensibilidad;
 
         rotacionX -= mouseY;
         rotacionX = Mathf.Clamp(rotacionX, -90f, 90f);

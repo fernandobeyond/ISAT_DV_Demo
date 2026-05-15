@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(Rigidbody), typeof(AudioSource))]
 public class MovimientoJugador : MonoBehaviour
 {
     public float velocidad = 4f;
@@ -14,14 +15,15 @@ public class MovimientoJugador : MonoBehaviour
     private int monedasTotales = 0;
     [SerializeField] private int vidasRestantes = 3;
 
-    void Start()
-    {
+    void Start() {
         rb = GetComponent<Rigidbody>();
+        rb.freezeRotation = true;
         audioSalto = GetComponent<AudioSource>();
+
+        NotificarCambioUI();
     }
 
-    void Update()
-    {
+    void Update() {
         // MOVIMIENTO BASICO
         Vector2 inputMovimiento = Vector2.zero;
 
@@ -39,46 +41,48 @@ public class MovimientoJugador : MonoBehaviour
             audioSalto.PlayOneShot(audioSalto.clip);
             puedeSaltar = false;
         }
-
-        NotificarCambioUI();
     }
 
     private void OnCollisionEnter(Collision collision) {
         Rigidbody rbImpactado = collision.gameObject.GetComponent<Rigidbody>();
 
-        if (rbImpactado != null)
-        {
+        if (rbImpactado != null) {
             Vector3 direccionFuerza = collision.gameObject.transform.position - transform.position;
             rbImpactado.AddForce(direccionFuerza.normalized * 2f, ForceMode.Impulse);
         }
 
-        if (collision.gameObject.CompareTag("Suelo"))
-        {
+        if (collision.gameObject.CompareTag("Suelo")) {
             puedeSaltar = true;
         }
     }
 
     private void OnTriggerEnter(Collider other) {
         if (other.CompareTag("Moneda")) {
-            Debug.Log("Moneda recogida.");
             monedasTotales++;
-            Debug.Log(salud + "-" + monedasTotales + "-" + vidasRestantes);
             Destroy(other.gameObject);
+
+            NotificarCambioUI();
         }
 
-        if (other.CompareTag("QuitarSalud"))
-        {
-            Debug.Log("-20 de salud");
-            salud -= 20;
-            Debug.Log(salud + "-" + monedasTotales + "-" + vidasRestantes);
+        if (other.CompareTag("QuitarSalud")) {
+            RecibirDanio(20);
             Destroy(other.gameObject);
         }
     }
 
-    // NOTIFICAR CAMBIOS EN LA UI
-    private void NotificarCambioUI()
-    {
-        uiManager.ActualizarHUD(salud, 100, monedasTotales, vidasRestantes);
+    public void RecibirDanio(int cantidad) {
+        salud -= cantidad;
+        Debug.Log("Salud actual: " + salud);
+        NotificarCambioUI();
+
+        if (salud <= 0) {
+            Debug.Log("GAME OVER: Sin vidas.");
+        }
     }
 
+    private void NotificarCambioUI() {
+        if (uiManager != null) {
+            uiManager.ActualizarHUD(salud, 100, monedasTotales, vidasRestantes);
+        }
+    }
 }
